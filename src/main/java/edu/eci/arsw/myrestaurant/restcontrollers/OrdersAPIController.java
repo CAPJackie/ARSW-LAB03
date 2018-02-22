@@ -67,26 +67,26 @@ public class OrdersAPIController {
     
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<?> getOrders(){
-        Map<String, Order> map = new HashMap<>();
+        Map<Integer, Order> map = new HashMap<>();
         Set<Integer> keys = ros.getTablesWithOrders();
         keys.forEach((i) -> {
             try {
-                map.put(Integer.toString(i), ros.getTableOrder(i));
+                map.put(i, ros.getTableOrder(i));
             } catch (OrderServicesException ex) {
                 Logger.getLogger(OrdersAPIController.class.getName()).log(Level.SEVERE, null, ex);
             }
         });               
-        String mapToJson = g.toJson(map);
-        return new ResponseEntity<>(mapToJson,HttpStatus.OK);
+        //String mapToJson = g.toJson(map);
+        return new ResponseEntity<>(map,HttpStatus.OK);
     }
     
     @RequestMapping(method = RequestMethod.GET, path = "/{idTable}")
-    public ResponseEntity<?> getOrder(@PathVariable String idTable){
+    public ResponseEntity<?> getOrder(@PathVariable int idTable){
         try{
-            Map<String, Order> map = new HashMap<>();
-            map.put(idTable, ros.getTableOrder(Integer.parseInt(idTable)));             
-            String mapToJson = g.toJson(map);
-            return new ResponseEntity<>(mapToJson,HttpStatus.OK);
+            Map<Integer, Order> map = new HashMap<>();
+            map.put(idTable, ros.getTableOrder(idTable));             
+            //String mapToJson = g.toJson(map);
+            return new ResponseEntity<>(map,HttpStatus.OK);
         } catch(OrderServicesException e){
             Logger.getLogger(OrdersAPIController.class.getName()).log(Level.SEVERE, null, e);
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -94,13 +94,14 @@ public class OrdersAPIController {
     }
     
     @RequestMapping(method = RequestMethod.POST)	
-    public ResponseEntity<?> addOrder(@RequestBody String order){
+    public ResponseEntity<?> addOrder(@RequestBody Map<Integer, Order> order){
             try {
-                Type listType = new TypeToken<Map<String, Order>>(){}.getType();
-                Map<String, Order> map = g.fromJson(order, listType);
-                Set<String> keys = map.keySet();
-                for(String s: keys){
-                    ros.addNewOrderToTable(map.get(s));
+                //Type listType = new TypeToken<Map<String, Order>>(){}.getType();
+                //Map<String, Order> map = g.fromJson(order, listType);
+                //Set<String> keys = map.keySet();
+                Set<Integer> keys = order.keySet();
+                for(Integer s: keys){
+                    ros.addNewOrderToTable(order.get(s));
                 }
                 return new ResponseEntity<>(HttpStatus.OK);          
             } catch(OrderServicesException e){
@@ -111,9 +112,9 @@ public class OrdersAPIController {
     }
     
     @RequestMapping(method = RequestMethod.GET, path = "/{idTable}/total")
-    public ResponseEntity<?> getTotalTableBill(@PathVariable String idTable){
+    public ResponseEntity<?> getTotalTableBill(@PathVariable int idTable){
         try {
-            return new ResponseEntity<>(ros.calculateTableBill(Integer.parseInt(idTable)),HttpStatus.OK);
+            return new ResponseEntity<>(ros.calculateTableBill(idTable),HttpStatus.OK);
         } catch (OrderServicesException ex) {
             Logger.getLogger(OrdersAPIController.class.getName()).log(Level.SEVERE, null, ex);
             return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
@@ -122,12 +123,12 @@ public class OrdersAPIController {
 
     
     @RequestMapping(method = RequestMethod.PUT, path = "{idTable}")
-    public ResponseEntity<?> updateOrder(@PathVariable String idTable, @RequestBody String plato){
-        Type tipo = new TypeToken<Map<String, String>>(){}.getType();
-        Map<String, String> map = g.fromJson(plato, tipo);
-        for(String key: map.keySet()){
+    public ResponseEntity<?> updateOrder(@PathVariable int idTable, @RequestBody Map<String, Integer> plato){
+        //Type tipo = new TypeToken<Map<String, String>>(){}.getType();
+        //Map<String, String> map = g.fromJson(plato, tipo);
+        for(String key: plato.keySet()){
             try {
-                ros.getTableOrder(Integer.parseInt(idTable)).addDish(key, Integer.parseInt(map.get(key)));               
+                ros.getTableOrder(idTable).addDish(key, plato.get(key));               
             } catch (OrderServicesException ex) {
                 Logger.getLogger(OrdersAPIController.class.getName()).log(Level.SEVERE, null, ex);
                 return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
@@ -139,9 +140,9 @@ public class OrdersAPIController {
     
     
     @RequestMapping(method = RequestMethod.DELETE, path = "{idTable}")
-    public ResponseEntity<?> deleteOrder(@PathVariable String idTable){
+    public ResponseEntity<?> deleteOrder(@PathVariable int idTable){
         try {
-            ros.releaseTable(Integer.parseInt(idTable));
+            ros.releaseTable(idTable);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (OrderServicesException ex) {
             Logger.getLogger(OrdersAPIController.class.getName()).log(Level.SEVERE, null, ex);
